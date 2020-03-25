@@ -55,6 +55,7 @@ pub struct Context {
     pub pipeline_layout: wgpu::PipelineLayout,
     pub pipeline: wgpu::RenderPipeline,
     pub texture: wgpu::Texture,
+    pub local_bind_group_layout: wgpu::BindGroupLayout,
 }
 
 const FRAG_SRC: &str = include_str!("../../shaders/debug.frag");
@@ -232,10 +233,10 @@ impl Context {
             alpha_to_coverage_enabled: false
         });
 
-        Context {uniform_buf, bind_group_layout, bind_group, pipeline_layout, pipeline, texture }
+        Context { uniform_buf, bind_group_layout, bind_group, pipeline_layout, pipeline, texture, local_bind_group_layout }
     }
 
-    pub fn load_model_from_obj(device: &wgpu::Device, path: &str) -> Model {
+    pub fn load_model_from_obj(&self, device: &wgpu::Device, path: &str) -> Model {
         let mut f = File::open(Path::new(path))
             .expect("Failed to load obj file");
         let mut buf = String::new();
@@ -243,19 +244,6 @@ impl Context {
 
         let obj_set = obj::parse(buf)
             .expect("Failed to parse obj file");
-
-        let bind_group_layout = 
-            device.create_bind_group_layout(
-                &wgpu::BindGroupLayoutDescriptor {
-                    bindings: &[
-                        wgpu::BindGroupLayoutEntry {
-                            binding: 0,
-                            visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
-                            ty: wgpu::BindingType::UniformBuffer { dynamic: false }
-                        }
-                    ]
-                }
-            );
 
         let mut meshes = vec!();
 
@@ -315,7 +303,7 @@ impl Context {
 
             let bind_group = device.create_bind_group(
                 &wgpu::BindGroupDescriptor {
-                    layout: &bind_group_layout,
+                    layout: &self.local_bind_group_layout,
                     bindings: &[
                         wgpu::Binding {
                             binding: 0,

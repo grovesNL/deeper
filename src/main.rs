@@ -156,7 +156,7 @@ async fn run_async() {
     register_components(&mut world);
 
     let mut model_array = vec![
-        graphics::Context::load_model_from_obj(&device, "assets/Models/plane.obj")
+        context.load_model_from_obj(&device, "assets/Models/plane.obj")
     ];
 
     // initialize dispacher with all game systems
